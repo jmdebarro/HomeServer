@@ -42,8 +42,10 @@ func getSupabaseConnection() *supabase.Client {
         log.Fatal("Failed to initalize the client: ", err)
     }
 
-    return client
+    supabaseClient = client
+    return supabaseClient
 }
+
 
 func recordReading(w http.ResponseWriter, r *http.Request) {
     /*
@@ -90,7 +92,7 @@ func recordReading(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func dataPage(w http.ResponseWriter, r *http.Request) {
+func getReadings(w http.ResponseWriter, r *http.Request) {
     /*
     Retrieve readings from supabase for frontend
     */
@@ -106,25 +108,16 @@ func dataPage(w http.ResponseWriter, r *http.Request) {
     }
 
     w.Header().Set("Content-Type", "application/json")
-    err = json.NewEncoder(w).Encode(data)
-
-    if err != nil {
-        fmt.Println(err)
-        http.Error(w, err.Error(), http.StatusBadRequest)
-    }
+    w.Write(data)
 }
-
-func homePage(w http.ResponseWriter, r *http.Request) {
-    fmt.Println("Home Page")
-}
-
 
 func handleRequests() {
-    http.HandleFunc("POST /record", recordReading)
-    http.HandleFunc("GET /show", dataPage)
-    http.HandleFunc("GET /", homePage)
-    log.Fatal(http.ListenAndServe(":10000", nil))
+    http.HandleFunc("POST /reading", recordReading)
+    http.HandleFunc("GET /reading", getReadings)
+    http.Handle("/", http.FileServer(http.Dir("./static")))
+
     fmt.Println("Listening on Port :10000")
+    log.Fatal(http.ListenAndServe(":10000", nil))
 }
 
 
